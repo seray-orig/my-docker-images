@@ -96,3 +96,4 @@ jobs:
           name: script-${{ matrix.app }}
           path: output/*
           retention-days: 1
+
