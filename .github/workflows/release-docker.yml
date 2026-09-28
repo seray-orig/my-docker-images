@@ -1,0 +1,98 @@
+name: Сборка образов в GHCR
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  packages: write    # Разрешение на пуш образов в GHCR
+
+jobs:
+  # -------------------------------------------------------------
+  # 1. Автоматический поиск папок с Dockerfile
+  # -------------------------------------------------------------
+  detect-folders:
+    name: Поиск сервисов
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Поиск папок
+        id: set-matrix
+        run: |
+          # Ищем папки в корне, в которых есть файл Dockerfile
+          FOLDERS=()
+          for d in */ ; do
+              if [ -f "${d}Dockerfile" ]; then
+                  FOLDERS+=("${d%/}") # Убираем слеш в конце
+              fi
+          done
+          
+          # Преобразуем массив в JSON, чтобы передать в следующую задачу
+          JSON_ARRAY=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${FOLDERS[@]}")
+          echo "Найдены папки: $JSON_ARRAY"
+          echo "matrix=$JSON_ARRAY" >> $GITHUB_OUTPUT
+
+  # -------------------------------------------------------------
+  # 2. Параллельная сборка и пуш в GHCR
+  # -------------------------------------------------------------
+  build-and-push:
+    name: Сборка и Push
+    needs: detect-folders
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: ${{ fromJson(needs.detect-folders.outputs.matrix) }}
+
+    steps:
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Определение версии (тега)
+        id: vars
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=manual-${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+          
+          # GHCR требует, чтобы имя владельца было в нижнем регистре
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "owner=$OWNER" >> $GITHUB_OUTPUT
+
+      - name: Логин в GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Токен выдается автоматически самим Actions
+
+      - name: Сборка и пуш образов (версия + latest)
+        run: |
+          APP_NAME="${{ matrix.app }}"
+          TAG="${{ steps.vars.outputs.tag }}"
+          OWNER="${{ steps.vars.outputs.owner }}"
+          
+          # Базовый адрес образа
+          IMAGE_BASE="ghcr.io/${OWNER}/${APP_NAME}"
+          
+          # 1. Собираем основной тег
+          docker build -t "${IMAGE_BASE}:${TAG}" "$APP_NAME"
+          docker push "${IMAGE_BASE}:${TAG}"
+          
+          # 2. Тегируем этот же образ как latest и отправляем
+          docker tag "${IMAGE_BASE}:${TAG}" "${IMAGE_BASE}:latest"
+          docker push "${IMAGE_BASE}:latest"
+
+      - name: Сохранение скрипта как артефакта
+        uses: actions/upload-artifact@v4
+        with:
+          name: script-${{ matrix.app }}
+          path: output/*
+          retention-days: 1
