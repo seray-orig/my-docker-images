@@ -1,0 +1,7 @@
+# Автоматическое определение текстовых файлов по умолчанию
+* text=auto
+
+# Принудительно сохранять и выгружать только в LF
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.dockerfile text eol=lf

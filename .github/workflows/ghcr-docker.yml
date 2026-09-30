@@ -1,0 +1,33 @@
+name: Публикация Docker-образа
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  push_to_registry:
+    name: Сборка и отправка образа в GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+      
+      - name: Авторизация в GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Сборка и публикация Docker-образа
+        uses: docker/build-push-action@v5
+        with:
+          context: ./gmod-server
+          push: true
+          tags: |
+            ghcr.io/seray-orig/gmod-server:latest
+            ghcr.io/seray-orig/gmod-server:${{ github.ref_name }}

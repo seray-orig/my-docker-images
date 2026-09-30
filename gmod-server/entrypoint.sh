@@ -1,21 +1,36 @@
 #!/bin/bash
 set -e
 
-STEAMCMD_DIR="/home/container/steamcmd"
-SERVER_DIR="/home/container/garrysmod"
+STEAMCMD_DIR="/home/steamcmd"
+SERVER_DIR="/home/server"
 
 mkdir -p "$STEAMCMD_DIR" "$SERVER_DIR"
 
 if [ ! -f "$STEAMCMD_DIR/steamcmd.sh" ]; then
-    echo "=== SteamCMD не найден. Скачивание и установка... ==="
+    echo "=== Скачивание и установка SteamCMD ==="
     cd "$STEAMCMD_DIR"
     curl -sSL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar -xz
 fi
 
-echo "=== Проверка обновлений Garry's Mod... ==="
-"$STEAMCMD_DIR/steamcmd.sh" +force_install_dir "$SERVER_DIR" +login anonymous +app_update 4020 validate +quit || true
+DO_UPDATE=false
+CLEANED_ARGS=()
 
-echo "=== Запуск игрового сервера... ==="
+for arg in "$@"; do
+    if [ "$arg" = "-update" ]; then
+        DO_UPDATE=true
+    else
+        CLEANED_ARGS+=("$arg")
+    fi
+done
+
+if [ "$DO_UPDATE" = true ]; then
+    echo "=== Проверка обновлений/установка Garry's Mod ==="
+    "$STEAMCMD_DIR/steamcmd.sh" +force_install_dir "$SERVER_DIR" +login anonymous +app_update 4020 validate +quit || true
+else
+    echo "=== Обновление Garry's Mod пропущено ==="
+fi
+
+echo "=== Запуск игрового сервера ==="
 cd "$SERVER_DIR"
 
 if [ -z "$*" ]; then

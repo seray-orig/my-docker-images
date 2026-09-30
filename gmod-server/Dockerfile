@@ -3,7 +3,9 @@ FROM debian:stable-slim
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8
-ENV HOME=/home/container
+
+ENV HOME=/home
+WORKDIR /home
 
 RUN dpkg --add-architecture i386 && \
     apt-get update && \
@@ -20,8 +22,6 @@ RUN dpkg --add-architecture i386 && \
         libtinfo5:i386 \
         libncurses5:i386 \
     && rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/snapshot.list
-
-WORKDIR /home/container
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
