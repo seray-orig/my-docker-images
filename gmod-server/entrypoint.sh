@@ -1,29 +1,15 @@
 #!/bin/bash
 set -e
 
-STEAMCMD_DIR="/home/steamcmd"
-SERVER_DIR="/home/server"
+SERVER_NAME="${SERVER_NAME:-server_default}"
+STEAMCMD_DIR="/opt/steamcmd"
+SERVER_DIR="/home/$SERVER_NAME"
+UPDATE_SERVER="${UPDATE_SERVER:-false}"
 
-mkdir -p "$STEAMCMD_DIR" "$SERVER_DIR"
+mkdir -p "$SERVER_DIR"
 
-if [ ! -f "$STEAMCMD_DIR/steamcmd.sh" ]; then
-    echo "=== Скачивание и установка SteamCMD ==="
-    cd "$STEAMCMD_DIR"
-    curl -sSL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar -xz
-fi
-
-DO_UPDATE=false
-CLEANED_ARGS=()
-
-for arg in "$@"; do
-    if [ "$arg" = "-update" ]; then
-        DO_UPDATE=true
-    else
-        CLEANED_ARGS+=("$arg")
-    fi
-done
-
-if [ "$DO_UPDATE" = true ]; then
+# Проверяем флаг обновления из переменной окружения
+if [ "$UPDATE_SERVER" = "true" ]; then
     echo "=== Проверка обновлений/установка Garry's Mod ==="
     "$STEAMCMD_DIR/steamcmd.sh" +force_install_dir "$SERVER_DIR" +login anonymous +app_update 4020 validate +quit || true
 else

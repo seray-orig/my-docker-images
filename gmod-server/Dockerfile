@@ -23,6 +23,10 @@ RUN dpkg --add-architecture i386 && \
         libncurses5:i386 \
     && rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/snapshot.list
 
+RUN mkdir -p /opt/steamcmd && \
+    curl -sSL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar -vxz -C /opt/steamcmd && \
+    chmod -R 777 /opt/steamcmd
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
