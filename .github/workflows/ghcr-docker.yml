@@ -31,3 +31,12 @@ jobs:
           tags: |
             ghcr.io/seray-orig/gmod-server:latest
             ghcr.io/seray-orig/gmod-server:${{ github.ref_name }}
+
+      - name: Сборка и публикация Docker-образа steamcmd
+        uses: docker/build-push-action@v6
+        with:
+          context: ./steamcmd
+          push: true
+          tags: |
+            ghcr.io/seray-orig/steamcmd:latest
+            ghcr.io/seray-orig/steamcmd:${{ github.ref_name }}

@@ -1,18 +1,14 @@
-FROM debian:bookworm-slim
+FROM ghcr.io/steamcmd/steamcmd:debian-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 \
     HOME=/server
 
-WORKDIR /server
+WORKDIR $HOME
 
-RUN dpkg --add-architecture i386 && \
-    apt-get update && \
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        ca-certificates \
-        lib32gcc-s1 \
-        lib32stdc++6 \
         libtinfo5:i386 \
         libncurses5:i386 \
     && rm -rf /var/lib/apt/lists/*
