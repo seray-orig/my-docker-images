@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
-echo "=== Запуск игрового сервера ==="
+HOST_UID=$(stat -c '%u' /server)
+HOST_GID=$(stat -c '%g' /server)
 
-if [ -z "$*" ]; then
-    exec ./srcds_run -game garrysmod -console +maxplayers 88 +map gm_construct
-else
-    exec ./srcds_run "$@"
-fi
+groupmod -o -g "$HOST_GID" server
+usermod -o -u "$HOST_UID" server
+
+echo -e "\e[1;33m=== Запуск игрового сервера ===\e[0m"
+exec gosu server ./srcds_run "$@"

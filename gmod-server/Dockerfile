@@ -1,14 +1,17 @@
-FROM ghcr.io/steamcmd/steamcmd:debian-bookworm
+FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 \
     HOME=/server
 
+RUN useradd -d $HOME -s /bin/false server
+
 WORKDIR $HOME
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+RUN dpkg --add-architecture i386 && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        gosu \
         libtinfo5:i386 \
         libncurses5:i386 \
     && rm -rf /var/lib/apt/lists/*
@@ -18,5 +21,7 @@ RUN chmod +x /entrypoint.sh
 
 EXPOSE 27015/udp
 EXPOSE 27015/tcp
+
+RUN gosu nobody true
 
 ENTRYPOINT ["/entrypoint.sh"]

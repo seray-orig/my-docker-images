@@ -23,7 +23,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Сборка и публикация Docker-образа
+      - name: Сборка и публикация Docker-образа gmod-server
         uses: docker/build-push-action@v6
         with:
           context: ./gmod-server
