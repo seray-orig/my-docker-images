@@ -9,7 +9,7 @@ usermod -o -u "$HOST_UID" steamcmd
 while true; do
     echo -e "\e[36m=== Установка/Обновление сервера ===\e[0m"
 
-    exec gosu steamcmd /steamcmd/steamcmd.sh "$@"
+    gosu steamcmd /steamcmd/steamcmd.sh "$@"
     STATUS=$?
 
     # Код 0 - стимцмд успешно справился.
