@@ -1,9 +1,15 @@
 #!/bin/bash
 
+HOST_UID=$(stat -c '%u' /server)
+HOST_GID=$(stat -c '%g' /server)
+
+groupmod -o -g "$HOST_GID" steamcmd
+usermod -o -u "$HOST_UID" steamcmd
+
 while true; do
     echo -e "\e[36m=== Установка/Обновление сервера ===\e[0m"
 
-    /steamcmd/steamcmd.sh "$@"
+    exec gosu steamcmd /steamcmd/steamcmd.sh "$@"
     STATUS=$?
 
     # Код 0 - стимцмд успешно справился.
